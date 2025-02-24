@@ -1,0 +1,105 @@
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
+    Arial, sans-serif;
+}
+
+/* Vue */
+[v-cloak] {
+  position: relative;
+}
+[v-cloak] > * {
+  visibility: hidden;
+}
+[v-cloak]:before {
+  content:"";
+  background: #fff url("../images/ajax-loader.gif") no-repeat top center;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 999;
+}
+div[data-pending="true"]:before {
+  background: #fff;
+  opacity: 0.9;
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1001;
+}
+div[data-pending="true"]:after {
+  content: "Processing... Please wait...";
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 50%;
+  z-index: 1002;
+  text-align: center;
+  color: #222;
+  font-size: 18px;
+  font-style: italic;
+} 
+
+[data-error="true"] label {
+  color: red;
+}
+[data-error="true"] .form-control {
+  border: 1px solid red;
+}
+[data-error="true"] a {
+  color: rgb(170, 14, 14);
+}
+
+textarea {
+  white-space: pre;
+  min-height: 800px;
+}
+
+
+
+/* Show/hide password field */
+.toggled-password-group {
+  display: flex;
+}
+.toggled-password-group input{
+  flex: 1;
+  border-radius: .25rem 0 0 .25rem;
+}
+.toggled-password-group button {
+  border-radius: 0 .25rem .25rem 0;
+  display: flex;
+  justify-content: center;
+  flex: 0;
+  border: 1px solid #ccc;
+  border-left: 0;
+}
+
+button.btn-eye svg:nth-child(1) {
+  fill:#444;
+}
+button.btn-eye svg:nth-child(2) {
+  display: none;
+  fill:#222;
+}
+button.btn-eye[data-state="text"] svg:nth-child(1) {
+  display: none;
+}
+button.btn-eye[data-state="text"] svg:nth-child(2) {
+  display: block;
+}
+
+
+.login-form {
+  background: #eeeeee;
+  background: -moz-linear-gradient(top,  #eeeeee 0%, #eeeeee 100%);
+  background: -webkit-linear-gradient(top,  #eeeeee 0%,#eeeeee 100%);
+  background: linear-gradient(to bottom,  #eeeeee 0%,#eeeeee 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#eeeeee', endColorstr='#eeeeee',GradientType=0 );
+  box-shadow: 0 0 5px #222;
+  border-radius: 10px;
+  padding: 20px ;
+}

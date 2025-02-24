@@ -1,0 +1,58 @@
+{% extends "document.html" %}
+
+{% block body %}
+<div id="vApp" v-cloak class="container" :data-pending="pending">
+  <div class="row">
+    <div class="col-md-12 pt-2">
+      <h1 class="h5 text-center mb-4">Device: {{bioDevice.name}}</h1>
+      <form ref="form" v-on:submit.prevent="onSubmit" action="/bio-device/{{bioDevice.id}}/sync" method="POST" novalidate>
+        <div class="form-group">
+          <label for="date">Date</label>
+          <input id="date" v-bind:readonly="pending" placeholder="Date" v-model="date" name="date" type="date" class="form-control">
+        </div>
+        <div class="form-group d-flex pt-2">
+          <a href="/" class="btn btn-light w-100 mr-1">Cancel</a>
+          <button name="btnSave" value="Save" class="btn btn-primary w-100 ml-1">Sync</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+    let vApp = new Vue({
+        el: '#vApp',
+        delimiters: ["${", "}"],
+        mixins: [
+        ],
+        data: {
+            pending: false,
+            date: moment().format('YYYY-MM-DD'),
+        },
+        computed: {
+           
+        },
+        mounted: function(){
+          let me = this;
+          // me.name = 'BIO_FING_SAL_ADM'
+          // me.ip = '10.50.15.89'
+          // me.username = 'fingerprint.salvador.1'
+          // me.password = 'lake_kangaroo_goes_rover_deluge_mower'
+        },
+        methods: {
+            
+            onSubmit: function(){
+                var me = this;
+                
+                me.pending = true;
+                   
+                me.$nextTick(function() {
+                    me.$refs.form.submit();
+                });
+            }
+        }
+    });
+</script>
+{% endblock %}

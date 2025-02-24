@@ -1,0 +1,118 @@
+{% extends "document.html" %}
+
+{% block body %}
+<div id="main" class="container" data-pending="false">
+  <div class="row">
+    <div id="vApp" v-cloak class="col-md-12 pt-2">
+      <h1 class="h5 text-center mb-4">Add Device</h1>
+      <form ref="form" v-on:submit.prevent="onSubmit" action="/bio-devices" method="POST" novalidate>
+        <div class="border p-3 mb-3">
+          <label for="name">Details</label>
+          <div class="form-group">
+            <input id="name" v-bind:readonly="pending" placeholder="Name" v-model="name" name="name" type="text" class="form-control">
+          </div>
+          <div class="form-group mb-0">
+            <input id="logFile" v-bind:readonly="pending" placeholder="Biometric File" v-model="logFile" name="logFile" type="text" class="form-control">
+          </div>
+        </div>
+        
+        <!-- <div class="form-group border p-3">
+          <label for="ip">Device</label>
+          <div class="form-row">
+            <div class="col-md-6">
+              <input id="ip" v-bind:readonly="pending" placeholder="IP Address" v-model="ip" name="ip" type="text" class="form-control">
+            </div>
+            <div class="col-md-3">
+              <input v-bind:readonly="pending" placeholder="Port" v-model="port" name="port" type="number" class="form-control">
+            </div>
+            <div class="col-md-3">
+              <input v-bind:readonly="pending" placeholder="Timeout" v-model="timeout" name="timeout" type="number" step="1000" class="form-control">
+            </div>
+          </div>
+        </div> -->
+        <div class="border p-3">
+          <label for="logFile">HRIS API</label>
+          <div class="form-group">
+            <select v-model="endPoint" name="endPoint" id="endPoint" v-bind:readonly="pending" class="form-control" name="endPoint" id="endPoint">
+              <option value="http://localhost:9094/api">http://localhost:9094/api</option>
+              <option value="https://hris.gsu.edu.ph/api">https://hris.gsu.edu.ph/api</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <input v-bind:readonly="pending" placeholder="Username" v-model="username" name="username" type="username" class="form-control" autocomplete="off">
+          </div>
+          <div class="form-group mb-0">
+              <div class="toggled-password-group">
+                  <input v-bind:readonly="pending" placeholder="Password" name="password" v-model="password" v-bind:type="passwordType" class="form-control" autocomplete="off">
+                  <button v-on:click="togglePassword" class="btn btn-eye d-flex align-items-center" v-bind:data-state="passwordType" type="button">
+                      <svg width="18" viewBox="0 0 24 24"><path d="M11.83,9L15,12.16C15,12.11 15,12.05 15,12A3,3 0 0,0 12,9C11.94,9 11.89,9 11.83,9M7.53,9.8L9.08,11.35C9.03,11.56 9,11.77 9,12A3,3 0 0,0 12,15C12.22,15 12.44,14.97 12.65,14.92L14.2,16.47C13.53,16.8 12.79,17 12,17A5,5 0 0,1 7,12C7,11.21 7.2,10.47 7.53,9.8M2,4.27L4.28,6.55L4.73,7C3.08,8.3 1.78,10 1,12C2.73,16.39 7,19.5 12,19.5C13.55,19.5 15.03,19.2 16.38,18.66L16.81,19.08L19.73,22L21,20.73L3.27,3M12,7A5,5 0 0,1 17,12C17,12.64 16.87,13.26 16.64,13.82L19.57,16.75C21.07,15.5 22.27,13.86 23,12C21.27,7.61 17,4.5 12,4.5C10.6,4.5 9.26,4.75 8,5.2L10.17,7.35C10.74,7.13 11.35,7 12,7Z" /></svg>
+                      <svg width="18" viewBox="0 0 24 24" ><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z" /></svg>
+                  </button>
+              </div>
+          </div>
+        </div>
+        <div class="form-group d-flex pt-2">
+          <a href="/" class="btn btn-light w-100 mr-1">Cancel</a>
+          <button name="btnSave" value="Save" class="btn btn-primary w-100 ml-1">Add</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+    let vApp = new Vue({
+        el: '#vApp',
+        delimiters: ["${", "}"],
+        mixins: [
+        ],
+        data: {
+            pending: false,
+            name: '{{name}}',
+            ip: '{{ip}}',
+            port: {{port|default(4370, true)}},
+            timeout: {{timeout|default(20000, true)}},
+            endPoint: '{{endPoint|default('http://localhost:9094/api', true)}}',
+            logFile: '{{logFile}}',
+            username: '{{username}}',
+            password: '{{password}}',
+            passwordType: 'password',
+        },
+        computed: {
+            disabled: function(){
+                return (!this.username || !this.password || this.pending);
+            },
+            loginText: function(){
+                return this.pending ? 'Logging in...' : 'Login';
+            }
+        },
+        mounted: function(){
+          let me = this;
+          // me.name = 'BIO_FING_SAL_ADM'
+          // me.ip = '10.50.15.89'
+          // me.logFile = `C:\\nodejs\\hris-connect\\biometric-scans.txt`
+          // me.username = 'fingerprint.salvador.1'
+        },
+        methods: {
+            togglePassword: function () {
+                if (this.passwordType === "password") {
+                    return this.passwordType = "text";
+                }
+                this.passwordType = "password"
+            },
+            onSubmit: function(){
+                var me = this;
+                
+                me.pending = true;
+                   
+                me.$nextTick(function() {
+                    me.$refs.form.submit();
+                });
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval';">
+    <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'"> -->
+    <meta name="description" content="HRIS Connect">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>{{APP_TITLE}}</title>
+
+    <!-- Bootstrap -->
+    <link rel="shortcut icon" href="/images/icon.png" />
+    <link rel="stylesheet" href="{{APP_URL}}:{{APP_PORT}}/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="{{APP_URL}}:{{APP_PORT}}/css/style.css" />
+</head>
+<body class="body">
+
+    {% block body %}{% endblock %}
+
+    {% block scripts %}
+    <script src="{{APP_URL}}:{{APP_PORT}}/js/vue.min.js"></script>
+    <script src="{{APP_URL}}:{{APP_PORT}}/js/jquery-3.7.1.min.js"></script>
+    <script src="{{APP_URL}}:{{APP_PORT}}/js/moment.min.js"></script>
+    <script src="{{APP_URL}}:{{APP_PORT}}/js/jwt-decode.min.js"></script>
+    <script src="{{APP_URL}}:{{APP_PORT}}/js/frontend.js"></script>
+    {% endblock %}
+</body>
+</html>
