@@ -1,0 +1,33 @@
+{% extends "document.html" %}
+
+{% block body %}
+<div id="main" class="container" data-pending="false">
+    <div class="row">
+      <div class="col-md-12 pt-2">
+        <h1 class="h5 text-center">HRIS Connect</h1>
+        <form id="form-1" action="/login" method="POST">
+          {% include 'parts/flash.html' %}
+          <div class="form-group">
+            <label for="endPoint">API End Point</label>
+            <select class="form-control" name="endPoint" id="endPoint">
+              <option value="http://localhost:9094/api">http://localhost:9094/api</option>
+              <option value="https://hris.gsu.edu.ph/api">https://hris.gsu.edu.ph/api</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input name="username" id="username" type="text" class="form-control" value="">
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input name="password" id="password" type="password" class="form-control" value="">
+          </div>
+          <div class="form-group">
+            <button name="btnSave" class="btn btn-primary w-100">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

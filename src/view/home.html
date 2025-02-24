@@ -1,0 +1,21 @@
+{% extends "document.html" %}
+
+{% block body %}
+<div id="main" class="container" data-pending="false">
+    <div class="row">
+      <div class="col-md-12 pt-2">
+        <h1 class="h5 text-center">HRIS Connect</h1>
+        <form action="/sync" method="post">
+            <div class="form-group">
+                <label for="date">Date</label>
+                <input name="date" id="date" type="date" class="form-control">
+            </div>
+            <div class="form-group">
+                <button name="btnSync" value="Sync" class="btn btn-primary w-100">Sync</button>
+            </div>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
