@@ -213,7 +213,7 @@
       let syncher = require('./sync')
 
       await new Promise(resolve => setTimeout(resolve, 1000)) // Rate limit 
-      
+
       if (action === 'watchLogFile') {
         let bioDevice = await dbModels.BioDevice.findOne({
           where: {
@@ -224,20 +224,20 @@
           console.log(`${moment().format('MMM-DD-YYYY hh:mmA')}: Watching file ${bioDevice.logFile}...`)
           watchFile(`${bioDevice.logFile}`, async (curr, prev) => {
             if (curr.mtimeMs > prev.mtimeMs && curr.size !== prev.size) {
-  
+
               const DATE_TO_PROCESS = moment()
               console.log(`${moment().format('MMM-DD-YYYY hh:mmA')}: File change detected, uploading file for ${DATE_TO_PROCESS.format('dddd MMM DD, YYYY')}...`)
-  
+
               let outext = await syncher.syncToServer(EXPRESS.locals.db, bioDevice.logFile, DATE_TO_PROCESS, bioDevice.username, bioDevice.password, bioDevice.endPoint)
-  
+
               // await cronJob(DATE_TO_PROCESS)
             }
           });
-          bioDevice.watching = true 
+          bioDevice.watching = true
           await bioDevice.save()
           return true
         }
-        
+
       } else if (action === 'unwatchLogFile') {
         let bioDevice = await dbModels.BioDevice.findOne({
           where: {
@@ -247,14 +247,14 @@
         if (bioDevice) {
           console.log(`${moment().format('MMM-DD-YYYY hh:mmA')}: Unwatching file ${bioDevice.logFile}...`)
           unwatchFile(`${bioDevice.logFile}`);
-          bioDevice.watching = false 
+          bioDevice.watching = false
           await bioDevice.save()
           return true
         }
       }
 
       return false
-      
+
     })
 
     // Finally the server
@@ -263,7 +263,7 @@
       let bioDevices = await dbModels.BioDevice.findAll({
         where: {}
       })
-      bioDevices.forEach(async (bioDevice)=>{
+      bioDevices.forEach(async (bioDevice) => {
         console.log(`${moment().format('MMM-DD-YYYY hh:mmA')}: Watching file ${bioDevice.logFile}...`)
         watchFile(`${bioDevice.logFile}`, async (curr, prev) => {
           if (curr.mtimeMs > prev.mtimeMs && curr.size !== prev.size) {
@@ -277,7 +277,7 @@
           }
         });
 
-        bioDevice.watching = true 
+        bioDevice.watching = true
         await bioDevice.save() // TODO: Possible mem leak?? Revisit implementation
       })
       rootBrowserWindow = createWindow();
@@ -296,27 +296,6 @@
     });
   });
 
-  app.on('before-quit', async () => {
-    console.log(`${moment().format('YYYY-MMM-DD hh:mm:ss A')}: App server stopping...`);
-    HTTP_SERVER.close(() => {
-      console.log(`${moment().format('YYYY-MMM-DD hh:mm:ss A')}: App server stopped.`);
-    });
-
-    let bioDevices = await dbModels.BioDevice.findAll({
-      where: {}
-    })
-    bioDevices.forEach((bioDevice)=>{
-      console.log(`${moment().format('MMM-DD-YYYY hh:mmA')}: Unwatching file ${bioDevice.logFile}...`)
-      unwatchFile(`${bioDevice.logFile}`);
-    })
-    // Reset all
-    await dbModels.BioDevice.update({
-      watching: false
-    },{
-      where: {}
-    })
-  });
-
   app.on('window-all-closed', (event) => {
     // Quit when all windows are closed, except on macOS. There, it's common
     // for applications and their menu bar to stay active until the user quits
@@ -325,6 +304,36 @@
       app.quit();
     }
   });
+
+  let quittedFlag = false
+
+  app.on('before-quit', async (event) => {
+    if (!quittedFlag) {
+      event.preventDefault()
+      console.log(`${moment().format('YYYY-MMM-DD hh:mm:ss A')}: App server stopping...`);
+      HTTP_SERVER.close(() => {
+        console.log(`${moment().format('YYYY-MMM-DD hh:mm:ss A')}: App server stopped.`);
+      });
+
+      let bioDevices = await dbModels.BioDevice.findAll({
+        where: {}
+      })
+      bioDevices.forEach((bioDevice) => {
+        console.log(`${moment().format('MMM-DD-YYYY hh:mmA')}: Unwatching file ${bioDevice.logFile}...`)
+        unwatchFile(`${bioDevice.logFile}`);
+      })
+      // Reset all
+      await dbModels.BioDevice.update({
+        watching: false
+      }, {
+        where: {}
+      })
+      quittedFlag = true
+      app.quit()
+    }
+  });
+
+
 
   // In this file you can include the rest of your app's specific main process
   // code. You can also put them in separate files and import them here.
