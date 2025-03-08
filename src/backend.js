@@ -31,7 +31,6 @@
   }
 
   let rootBrowserWindow = null
-  let tray = null
   global.APP_DIR = path.resolve(__dirname, '..').replace(/\\/g, '/'); // Turn back slash to slash for cross-platform compat
 
 
@@ -101,7 +100,6 @@
           {
             label: 'Quit',
             click: async () => {
-              tray?.destroy()
               app.quit()
             }
           },
@@ -163,31 +161,6 @@
 
     // Open the DevTools.
     mainWindow.webContents.openDevTools();
-
-    // Prevent app from quitting when window is closed
-    mainWindow.on('close', (event) => {
-      event.preventDefault();
-      mainWindow.hide();
-    });
-
-    // Create the Tray Icon
-    tray = new Tray(path.join(APP_DIR, 'src', 'public', 'images', 'icon.png')); // Use an appropriate icon
-    const contextMenu = Menu.buildFromTemplate([
-      { label: 'Show App', click: () => mainWindow.show() },
-      {
-        label: 'Quit', click: () => {
-          tray?.destroy()
-          app.quit()
-        }
-      }
-    ]);
-    tray?.setToolTip('HRIS Connect');
-    tray?.setContextMenu(contextMenu);
-
-    // Show when clicking the tray icon
-    tray?.on('click', () => {
-      mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show();
-    });
 
     return mainWindow
   };
@@ -345,15 +318,12 @@
   });
 
   app.on('window-all-closed', (event) => {
-
     // Quit when all windows are closed, except on macOS. There, it's common
     // for applications and their menu bar to stay active until the user quits
     // explicitly with Cmd + Q.
     if (process.platform !== 'darwin') {
       app.quit();
     }
-
-    // event.preventDefault(); // Prevents app from quitting when all windows are closed
   });
 
   // In this file you can include the rest of your app's specific main process
