@@ -3,9 +3,11 @@
     const $main = $('#main')
     const $btnSync = $('button[name="btnSync"]')
 
-    $btnSync.on('click', function(e){
-        $main.attr('data-pending', 'true');
-
-    })
+    
 
 })(jQuery)
+
+// This is assigned a callback function from preload.js
+window.electronAPI.onDataFromBackend((value) => {
+    console.log(value)
+})

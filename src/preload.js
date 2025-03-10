@@ -4,6 +4,8 @@ const { contextBridge, ipcRenderer } = require('electron')
 
 // This goes to window.electronAPI in renderer.js
 contextBridge.exposeInMainWorld('electronAPI', {
-    onDataFromBackend: (callback) => ipcRenderer.on('onDataFromBackend', (_event, value) => callback(value)),
+    onDataFromBackend: (callback) => ipcRenderer.on('onDataFromBackend', (_event, value) => {
+        callback(value)
+    }),
     sendToBackend: (action, params) => ipcRenderer.invoke('onDataFromFrontend', action, params),
 })

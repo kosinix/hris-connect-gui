@@ -66,7 +66,7 @@
     app.quit();
   }
 
-  const createWindow = () => {
+  const createWindow = async () => {
     // Create the browser window.
     const mainWindow = new BrowserWindow({
       width: 800,
@@ -75,7 +75,7 @@
       minHeight: 600,
       icon: path.join(APP_DIR, 'src', 'public', 'images', 'icon.png'),
       webPreferences: {
-        preload: path.join(__dirname, 'preload.js'),
+        preload: path.join(APP_DIR, 'src', 'preload.js'),
       },
     });
 
@@ -140,7 +140,7 @@
     Menu.setApplicationMenu(menu)
     //////////////////////////////////////
 
-    mainWindow.loadURL(`${APP_URL}:${APP_PORT}`)
+    await mainWindow.loadURL(`${APP_URL}:${APP_PORT}`)
 
     // Restrict navigation
     mainWindow.webContents.on('will-navigate', (event, url) => {
@@ -210,9 +210,16 @@
   // Some APIs can only be used after this event occurs.
   app.whenReady().then(() => {
     ipcMain.handle('onDataFromFrontend', async (_event, action, params) => {
-      let syncher = require('./sync')
 
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Rate limit 
+      // await new Promise(resolve => setTimeout(resolve, 1000)) // Rate limit 
+      const konsol = {
+        log: (m) => {
+          // Log here
+          console.log(m)
+          // Log to renderer
+          rootBrowserWindow.webContents.send('onDataFromBackend', m)
+        }
+      }
 
       if (action === 'watchLogFile') {
         let bioDevice = await dbModels.BioDevice.findOne({
@@ -221,14 +228,14 @@
           }
         })
         if (bioDevice) {
-          console.log(`${moment().format('MMM-DD-YYYY hh:mmA')}: Watching file ${bioDevice.logFile}...`)
+          konsol.log(`${moment().format('MMM-DD-YYYY hh:mmA')}: Watching file ${bioDevice.logFile}...`)
           watchFile(`${bioDevice.logFile}`, async (curr, prev) => {
             if (curr.mtimeMs > prev.mtimeMs && curr.size !== prev.size) {
 
               const DATE_TO_PROCESS = moment()
               console.log(`${moment().format('MMM-DD-YYYY hh:mmA')}: File change detected, uploading file for ${DATE_TO_PROCESS.format('dddd MMM DD, YYYY')}...`)
 
-              let outext = await syncher.syncToServer(EXPRESS.locals.db, bioDevice.logFile, DATE_TO_PROCESS, bioDevice.username, bioDevice.password, bioDevice.endPoint)
+              let outext = await require('./sync').syncToServer(EXPRESS.locals.db, bioDevice.logFile, DATE_TO_PROCESS, bioDevice.username, bioDevice.password, bioDevice.endPoint)
 
               // await cronJob(DATE_TO_PROCESS)
             }
@@ -245,7 +252,7 @@
           }
         })
         if (bioDevice) {
-          console.log(`${moment().format('MMM-DD-YYYY hh:mmA')}: Unwatching file ${bioDevice.logFile}...`)
+          konsol.log(`${moment().format('MMM-DD-YYYY hh:mmA')}: Unwatching file ${bioDevice.logFile}...`)
           unwatchFile(`${bioDevice.logFile}`);
           bioDevice.watching = false
           await bioDevice.save()
@@ -258,29 +265,48 @@
     })
 
     // Finally the server
-    HTTP_SERVER.listen(APP_PORT, async function () {
+    HTTP_SERVER.listen(APP_PORT, () => {
       console.log(`${moment().format('YYYY-MMM-DD hh:mm:ss A')}: App server running at "${APP_URL}:${APP_PORT}"`);
-      let bioDevices = await dbModels.BioDevice.findAll({
-        where: {}
-      })
-      bioDevices.forEach(async (bioDevice) => {
-        console.log(`${moment().format('MMM-DD-YYYY hh:mmA')}: Watching file ${bioDevice.logFile}...`)
-        watchFile(`${bioDevice.logFile}`, async (curr, prev) => {
-          if (curr.mtimeMs > prev.mtimeMs && curr.size !== prev.size) {
 
-            const DATE_TO_PROCESS = moment()
-            console.log(`${moment().format('MMM-DD-YYYY hh:mmA')}: File change detected, uploading file for ${DATE_TO_PROCESS.format('dddd MMM DD, YYYY')}...`)
-
-            let outext = await syncher.syncToServer(EXPRESS.locals.db, bioDevice.logFile, DATE_TO_PROCESS, bioDevice.username, bioDevice.password, bioDevice.endPoint)
-
-            // await cronJob(DATE_TO_PROCESS)
+      createWindow().then((_rootBrowserWindow) => {
+        rootBrowserWindow = _rootBrowserWindow
+        const konsol = {
+          log: (m) => {
+            // Log here
+            console.log(m)
+            // Log to renderer
+            rootBrowserWindow.webContents.send('onDataFromBackend', m)
           }
-        });
+        }
+        dbModels.BioDevice.findAll({
+          where: {}
+        }).then((bioDevices) => {
+          // 
+          for (let x = 0; x < bioDevices.length; x++) {
+            let bioDevice = bioDevices[x]
 
-        bioDevice.watching = true
-        await bioDevice.save() // TODO: Possible mem leak?? Revisit implementation
+            konsol.log(`${moment().format('MMM-DD-YYYY hh:mmA')}: Watching file ${bioDevice.logFile}...`)
+            watchFile(`${bioDevice.logFile}`, async (curr, prev) => {
+              if (curr.mtimeMs > prev.mtimeMs && curr.size !== prev.size) {
+
+                const DATE_TO_PROCESS = moment()
+                konsol.log(`${moment().format('MMM-DD-YYYY hh:mmA')}: File change detected, uploading file for ${DATE_TO_PROCESS.format('dddd MMM DD, YYYY')}...`)
+
+                let outext = await require('./sync').syncToServer(EXPRESS.locals.db, bioDevice.logFile, DATE_TO_PROCESS, bioDevice.username, bioDevice.password, bioDevice.endPoint)
+
+              }
+            });
+          }
+          // 
+          dbModels.BioDevice.update({
+            watching: true
+          }, {
+            where: {}
+          }).then(() => { }).catch(err => console.error(err))
+
+        }).catch(err => console.error(err))
+
       })
-      rootBrowserWindow = createWindow();
 
     });
     HTTP_SERVER.keepAliveTimeout = 60000 * 2;
@@ -294,7 +320,7 @@
         createWindow();
       }
     });
-  });
+  })
 
   app.on('window-all-closed', (event) => {
     // Quit when all windows are closed, except on macOS. There, it's common
@@ -333,7 +359,10 @@
     }
   });
 
-
+  process.on('uncaughtException', function (e) {
+    console.error(e);
+    app.quit()
+  });
 
   // In this file you can include the rest of your app's specific main process
   // code. You can also put them in separate files and import them here.
