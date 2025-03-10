@@ -237,7 +237,6 @@
 
               let outext = await require('./sync').syncToServer(EXPRESS.locals.db, bioDevice.logFile, DATE_TO_PROCESS, bioDevice.username, bioDevice.password, bioDevice.endPoint)
 
-              // await cronJob(DATE_TO_PROCESS)
             }
           });
           bioDevice.watching = true
@@ -268,44 +267,31 @@
     HTTP_SERVER.listen(APP_PORT, () => {
       console.log(`${moment().format('YYYY-MMM-DD hh:mm:ss A')}: App server running at "${APP_URL}:${APP_PORT}"`);
 
+      dbModels.BioDevice.findAll({
+        where: {}
+      }).then((bioDevices) => {
+        // Watch all devices logs
+        for (let x = 0; x < bioDevices.length; x++) {
+          let bioDevice = bioDevices[x]
+          console.log(`${moment().format('MMM-DD-YYYY hh:mmA')}: Watching file ${bioDevice.logFile}...`)
+          watchFile(`${bioDevice.logFile}`, async (curr, prev) => {
+            if (curr.mtimeMs > prev.mtimeMs && curr.size !== prev.size) {
+              const DATE_TO_PROCESS = moment()
+              console.log(`${moment().format('MMM-DD-YYYY hh:mmA')}: File change detected, uploading file for ${DATE_TO_PROCESS.format('dddd MMM DD, YYYY')}...`)
+              let outext = await require('./sync').syncToServer(EXPRESS.locals.db, bioDevice.logFile, DATE_TO_PROCESS, bioDevice.username, bioDevice.password, bioDevice.endPoint)
+            }
+          });
+        }
+        // Set their flag to true
+        dbModels.BioDevice.update({
+          watching: true
+        }, {
+          where: {}
+        }).then(() => { }).catch(err => console.error(err))
+      }).catch(err => console.error(err))
+
       createWindow().then((_rootBrowserWindow) => {
         rootBrowserWindow = _rootBrowserWindow
-        const konsol = {
-          log: (m) => {
-            // Log here
-            console.log(m)
-            // Log to renderer
-            rootBrowserWindow.webContents.send('onDataFromBackend', m)
-          }
-        }
-        dbModels.BioDevice.findAll({
-          where: {}
-        }).then((bioDevices) => {
-          // 
-          for (let x = 0; x < bioDevices.length; x++) {
-            let bioDevice = bioDevices[x]
-
-            konsol.log(`${moment().format('MMM-DD-YYYY hh:mmA')}: Watching file ${bioDevice.logFile}...`)
-            watchFile(`${bioDevice.logFile}`, async (curr, prev) => {
-              if (curr.mtimeMs > prev.mtimeMs && curr.size !== prev.size) {
-
-                const DATE_TO_PROCESS = moment()
-                konsol.log(`${moment().format('MMM-DD-YYYY hh:mmA')}: File change detected, uploading file for ${DATE_TO_PROCESS.format('dddd MMM DD, YYYY')}...`)
-
-                let outext = await require('./sync').syncToServer(EXPRESS.locals.db, bioDevice.logFile, DATE_TO_PROCESS, bioDevice.username, bioDevice.password, bioDevice.endPoint)
-
-              }
-            });
-          }
-          // 
-          dbModels.BioDevice.update({
-            watching: true
-          }, {
-            where: {}
-          }).then(() => { }).catch(err => console.error(err))
-
-        }).catch(err => console.error(err))
-
       })
 
     });
