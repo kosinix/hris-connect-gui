@@ -2,7 +2,7 @@
   "name": "hris-connect-gui",
   "productName": "hris-connect-gui",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "A software program for connecting and uploading logs from biometric devices into the HRIS.",
   "main": "src/index.js",
   "scripts": {
     "start": "electron-forge start",
