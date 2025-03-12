@@ -79,67 +79,11 @@
       },
     });
 
-    //////////////////
-    const menu = Menu.buildFromTemplate([
-      {
-        label: '&App',
-        submenu: [
-          {
-            label: 'Home',
-            // accelerator: 'Home', // Optional: Add a keyboard shortcut
-            click: async () => {
-              mainWindow.loadURL(`${APP_URL}:${APP_PORT}/`)
-            }
-          },
-          {
-            label: 'Logout',
-            click: async () => {
-              mainWindow.loadURL(`${APP_URL}:${APP_PORT}/logout`)
-            }
-          },
-          {
-            label: 'Quit',
-            click: async () => {
-              app.quit()
-            }
-          },
-          // { role: 'quit' },
-        ]
-      },
-      {
-        label: '&View',
-        submenu: [
-          {
-            label: 'Toggle Full Screen',
-            accelerator: 'F11', // Optional: Add a keyboard shortcut
-            click: () => {
-              mainWindow.setFullScreen(!mainWindow.isFullScreen());
-            }
-          },
-          {
-            label: 'Open Data Directory',
-            click: async () => {
-              shell.openPath(APP_DATA_DIR)
-            }
-          },
-        ]
-      },
-      {
-        role: 'help',
-        submenu: [
-          {
-            label: 'About',
-            click: async () => {
-              // await shell.openExternal('https://ict.gsu.edu.ph')
-              mainWindow.loadURL(`${APP_URL}:${APP_PORT}/about`)
-            }
-          }
-        ]
-      }
-    ])
+    // Menu
+    const menu = require('./menu')(app, mainWindow)
     Menu.setApplicationMenu(menu)
-    //////////////////////////////////////
 
+    // Starting page
     await mainWindow.loadURL(`${APP_URL}:${APP_PORT}`)
 
     // Restrict navigation
@@ -211,7 +155,6 @@
   app.whenReady().then(() => {
     ipcMain.handle('onDataFromFrontend', async (_event, action, params) => {
 
-      // await new Promise(resolve => setTimeout(resolve, 1000)) // Rate limit 
       const konsol = {
         log: (m) => {
           // Log here
@@ -241,6 +184,7 @@
           });
           bioDevice.watching = true
           await bioDevice.save()
+          await new Promise(resolve => setTimeout(resolve, 600)) // Rate limit 
           return true
         }
 
@@ -255,6 +199,7 @@
           unwatchFile(`${bioDevice.logFile}`);
           bioDevice.watching = false
           await bioDevice.save()
+          await new Promise(resolve => setTimeout(resolve, 600)) // Rate limit 
           return true
         }
       }
@@ -267,17 +212,17 @@
     HTTP_SERVER.listen(APP_PORT, () => {
       console.log(`${moment().format('YYYY-MMM-DD hh:mm:ss A')}: App server running at "${APP_URL}:${APP_PORT}"`);
 
-      
 
 
-      
+
+
 
       // Set their flag to true
       dbModels.BioDevice.update({
         watching: true
       }, {
         where: {}
-      }).then(() => { 
+      }).then(() => {
 
         // 
         createWindow().then((_rootBrowserWindow) => {
@@ -308,7 +253,7 @@
                 }
               });
             }
-            
+
           }).catch(err => console.error(err))
           // 
 
