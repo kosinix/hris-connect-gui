@@ -94,13 +94,11 @@
       }
     });
 
-    // Restrict new window creation
+    // Restrict new window creation (Eg. mid mouse click)
     mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-      if (!url.startsWith(`${APP_URL}:${APP_PORT}`)) {
         console.error(`Blocked attempt to open new window for: ${url}`);
         return { action: 'deny' };
-      }
-      return { action: 'allow' };
+      // return { action: 'allow' };
     });
 
     // Open the DevTools.
