@@ -1,6 +1,6 @@
 {
   "name": "hris-connect-gui",
-  "productName": "hris-connect-gui",
+  "productName": "HRIS Connect GUI",
   "version": "1.0.0",
   "description": "A software program for connecting and uploading logs from biometric devices into the HRIS.",
   "main": "src/index.js",
